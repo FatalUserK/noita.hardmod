@@ -148,6 +148,7 @@ end
 ---@return entity_id
 function ShootProjectile(shooter, entity_file, x, y, vel_x, vel_y, send_message)
 	---@type entity_id
+	---@diagnostic disable-next-line: assign-type-mismatch
 	shooter = shooter or 0
 	local entity_id = EntityLoad(entity_file, x, y)
 	vel_x = vel_x or 0

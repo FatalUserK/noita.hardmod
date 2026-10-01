@@ -10,6 +10,7 @@ local modules = {
 	"test_module_dont_run",
 	"example",
 	"nerfed_combat_healing",
+	"enemy_perks",
 }
 
 local force_enable_state = {
