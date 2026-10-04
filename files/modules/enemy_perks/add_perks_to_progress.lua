@@ -3,7 +3,7 @@ local enemy_perks = dofile_once("mods/noita.hardmod/files/modules/enemy_perks/en
 
 for _,perk in ipairs(enemy_perks) do
 	local not_progress
-	if perk.perk_name:sub(1,1) ~= "$" then
+	if perk.name:sub(1,1) ~= "$" then
 		print("PERK [" .. perk.id .. "] NOT ADDED TO PROGRESS, NAME IS NOT TRANSLATION")
 		not_progress = true
 	elseif perk.not_progress then
@@ -15,8 +15,8 @@ for _,perk in ipairs(enemy_perks) do
 
 		RegisterPerk(
 			perk_id,
-			perk.perk_name,
-			perk.perk_desc,
+			perk.name,
+			perk.desc or "",
 			perk.icon,
 			perk.icon
 		)
