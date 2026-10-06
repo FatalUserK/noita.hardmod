@@ -1,4 +1,19 @@
+---@diagnostic disable: lowercase-global
 --Useful scripts.
+
+-- de-patterning function for dealing with string.gsub() and other pattern-utilising Lua functions.
+---@param str string
+---@return string
+---@return integer
+function escape(str) return str:gsub("[%(%)%.%%%+%-%*%?%[%^%$%]]", "%%%1") end
+
+-- Convenient function to simplify modifying files, gsub \r\n to \n to edit multiple lines at a time.
+---@param file string filepath
+---@param target string target you wish to replace
+---@param sub string what you wish to replace it with
+function modifile(file, target, sub)
+	ModTextFileSetContent(file, ModTextFileGetContent(file):gsub("\r\n", "\n"):gsub(escape(target), sub))
+end
 
 
 ---handy func i stole that converts an entire table to string, grabbed from [here](https://stackoverflow.com/questions/9168058/how-to-dump-a-table-to-console)
