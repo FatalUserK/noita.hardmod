@@ -613,3 +613,113 @@ yeah
 Update splashes.lua
 added logos
 updated translations
+added lamia to end credits
+MATH.MAX, NOT MATH.MIN AAAAAAAAAA
+ok
+disable recharge trick (no more 15 minute RT)
+lowered physics damage taken by the player
+finished Blessed Blood perk?
+Update workshop.xml
+ran build script
+Unnerfed Ira's teleport ratio
+fixes
+nerf arrow's spread
+make SLOC count ACTUALLY correct (bruh)
+fix Echo Bolt not showing explosion sprite
+crystal can sleep, made fake wall more obvious, optimised evil dani code, gave up on new perk (im exploding nolla)
+made lukkis not dig statues
+make Trial perks also reward player while poly'd
+add ring of elevation to Trial chests
+fix indulgence draining all money bug
+fix some invalid refs
+give Arrow crit chance
+disabled nefarious tripping bs, also fixed quantum cloning CBC issue
+fix(??) instant recharge trick thing
+buff Flamethrower
+lower Flamethrower mana cost
+make Heal Bullet cost more on Indulgence
+make Vigour heal up to 1% max hp
+update Vigour wounded logic
+6 8
+added d2d Promote Spell, replacing Always Cast perk
+fixed and added Blessed Blood Money perk, fixed trick blood money
+increased orb tinker check radius
+removed evil and nefarious eof newline
+add Dark Flames perk
+improve Wand Experimenter
+make StP a T10 spell
+remove old Wand Experimenter files
+forgot an important file lol
+add missing TL
+add Area Protector perk
+make Kamikaze eperk slightly more common in Coal Pits
+buff Zeta
+updated splashes
+Merge remote-tracking branch 'upstream/main' into pr/176
+OOPS promote spell should not have a base chance of 125% lmao
+nerf da buff
+Merge remote-tracking branch 'fork/main'
+limit heartbreak max hp loss
+fixed probability oversight in Promote Random Spell
+guaranteed summon egg in HM6, guaranteed small tele in HM7
+added retries in case of hm shop injection fail
+ran split.run_lua and build.js
+(area) protector eperk tweaks
+disable WandEx rework for now (ugghhh... BORING!!!!!)
+fix(?) Vigour eperk not healing Minä
+Revert "remove old Wand Experimenter files"
+tweaky tweaky
+add Shield Sapper eperk
+nerf Shielded perk
+Zeta now works like described I promise
+disable Dark Flames eperk just in case
+false alarm, WHEW
+add TL for Shield Sapper
+2 NOT 2000
+fixed determinism for guaranteed HM spells
+added "perk rain" event
+finalised effect, removed debug trigger
+ran build scripts
+make Kamikaze deal a bit less damage
+make Shielded eperk a bit less common early
+added weakghost aura ring indicator
+added 2 new eperks: Holy Reflection and Unstable Teleportitis
+Error handling to init.lua, files/scripts/perks.lua and files/scripts/spells.lua
+fixed worms and lukki digging HM again
+OOPS BROKE DARK FLAME EPERK
+move module list to a separate lua file
+error wrapping
+biome map error
+add guaranteed hastium HM basin somewhere in the first 2 levels
+make guaranteed hastium HM basin only in 2nd level, not 1st
+fixed a few issues
+update runtime translation parser print to have a toggle
+tinkerzone on collapse
+nothing to see here
+Apoth biomemap compat + Slight Ira Buff
+Update biome_map.lua
+Update todo.txt
+make Protector shields smaller
+give Stinky aura an outline
+quick fix for thunderlord + stun immunity
+Update userk_todo.md
+nerf t1 Shielded eperk
+make Divine Shield not trigger on heal spells
+rework dark wizard ase interaction
+Ira Tweaks
+idk what happened here
+revert matosade nerf
+applied ASE rework to sunseed/sunstone
+add All-Seeing eperk
+make Vigour eperk unable to spawn in meat
+tweak Electricity eperk spawn rates
+prevent Shielded + Protector spawn
+flip Reduce Recharge spell back
+reworking item immunities to be more extendible...
+merge that shit
+finished rewriting amplified items perk
+adding new on-death func support for eperks
+adding on_death hook for eperks
+restructured modules.lua
+fixed incompat with apotheosis
+ran build scripts

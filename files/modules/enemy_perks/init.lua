@@ -1,12 +1,14 @@
-local hooks = {}
+local hooks = {} ---@type hooks
 local _g = HARDMOD_GLOBAL_DATA
 local utils = dofile_once("mods/noita.hardmod/lib/utilities.lua") ---@type utils
 local biome_index ---@type biome_path_to_simple_id
 local eperk_utils ---@type eperk_utils
+local nxml = dofile_once("mods/noita.hardmod/lib/nxml/nxml.lua") ---@type nxml
 
 local dir = "mods/noita.hardmod/files/modules/enemy_perks/"
 
 ModLuaFileAppend("data/scripts/perks/perk_reflect.lua", dir.."add_perks_to_progress.lua")
+ModLuaFileAppend("data/scripts/items/__drop_money.lua", dir.."append_drop_money.lua")
 
 
 local base_perk_chance = .15
@@ -81,7 +83,7 @@ hooks.mod_post_init = function() --run later for appends
 end
 
 hooks.new_eid = function(entity_id)
-	if EntityHasTag(entity_id, "enemy") and not EntityHasTag(entity_id, "hardmod_blessed") or EntityHasTag(entity_id, "no_enemy_perks") then
+	if EntityHasTag(entity_id, "enemy") and not (EntityHasTag(entity_id, "hardmod_blessed") or EntityHasTag(entity_id, "no_enemy_perks")) then
 		local is_boss = EntityHasTag(entity_id, "boss")
 		local x,y = EntityGetTransform(entity_id)
 		local biome = biome_index[DebugBiomeMapGetFilename(x, y)]
@@ -94,8 +96,8 @@ hooks.new_eid = function(entity_id)
 		end
 
 		local level = (is_boss and 5 or biome_data.level) --if is_boss, override biome level
-			+ (tonumber(SessionNumbersGetValue("NEW_GAME_PLUS_COUNT")) or 0) -- + NG+ iteration
-			+ (GetParallelWorldPosition(x, y) ~= 0 and 3 or 0) -- +3 if in a PW
+			+ (tonumber(SessionNumbersGetValue("NEW_GAME_PLUS_COUNT")) or 0)*2 -- + NG+ iteration
+			+ (GetParallelWorldPosition(x, y) * 3) -- +3 per PW
 		if biome_data.do_recursive_roll ~= false then
 			for _=1, level do
 				local function plus_one_perk()
@@ -270,5 +272,13 @@ function hooks.post_update(frame)
 		end
 	end
 end--]]
+
+for file in nxml.edit_file("data/entities/projectiles/darkflame_stationary.xml") do
+	file:set("tags", "hardmod_darkflame")
+end
+
+function hooks.world_init()
+	EntityLoad(dir.."nothing_to_see_here.xml", 0, 0)
+end
 
 return hooks

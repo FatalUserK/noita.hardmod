@@ -147,7 +147,15 @@ hooks.spell_patches = {
 			current_reload_time = current_reload_time - 8
 		end
 	},
-	["FLAMETHROWER"] = { max_uses = -1 }, -- damage is also changed in damage.lua
+	["FLAMETHROWER"] = { -- damage is also changed in damage.lua
+		mana = 15,
+		max_uses = -1,
+		action = function()
+			add_projectile("data/entities/projectiles/deck/flamethrower.xml")
+			c.fire_rate_wait = c.fire_rate_wait - 8
+			c.spread_degrees = c.spread_degrees + 4.0
+		end,
+	},
 	["BUCKSHOT"] = {
 		action 		= function()
 			add_projectile("data/entities/projectiles/deck/buckshot_player.xml")
@@ -161,12 +169,31 @@ hooks.spell_patches = {
 	["LASER_EMITTER_CUTTER"] = { mana = 80 },
 	["LASER_EMITTER_FOUR"] = { mana = 120 },
 	["ORBIT_LASERS"] = { mana = 140, max_uses = 5 },
+	["ARROW"] = {
+		action = function()
+			add_projectile("data/entities/projectiles/deck/arrow.xml")
+			c.fire_rate_wait = c.fire_rate_wait + 10
+			c.spread_degrees = c.spread_degrees - 8
+			c.damage_critical_chance = c.damage_critical_chance + 7
+			shot_effects.recoil_knockback = 15.0
+		end,
+	},
+	["HEAL_BULLET"] = { indulgence_price = 250 },
+	["SPELLS_TO_POWER"] = { spawn_level = "10", spawn_probability = "0.5" },
+	-- ["TOUCH_WATER"] = { indulgence_cost = 500 },
+	-- ["TOUCH_OIL"] = { indulgence_cost = 500 },
+	-- ["TOUCH_ALCOHOL"] = { indulgence_cost = 500 },
+	-- ["TOUCH_PISS"] = { indulgence_cost = 500 },
+	-- ["TOUCH_GRASS"] = { indulgence_cost = 500 },
+	-- ["TOUCH_BLOOD"] = { indulgence_cost = 500 },
+	-- ["TOUCH_SMOKE"] = { indulgence_cost = 500 },
+	-- ["TOUCH_GOLD"] = { indulgence_cost = 500 },
 }
 
 local mats = { "MATERIAL_WATER", "MATERIAL_OIL", "MATERIAL_BLOOD", "MATERIAL_CEMENT", "WATER_TRAIL" }
 local crits = { "HITFX_CRITICAL_WATER", "HITFX_CRITICAL_OIL", "HITFX_CRITICAL_BLOOD" }
 
-for _,spell in pairs(mats) do hooks.spell_patches[spell] = { mana = 18 } end
+for _,spell in pairs(mats) do hooks.spell_patches[spell] = { mana = 7 } end
 for _,spell in pairs(crits) do hooks.spell_patches[spell] = { mana = 25 } end
 
 local curses = { "CURSE", "CURSE_WITHER_PROJECTILE", "CURSE_WITHER_EXPLOSION", "CURSE_WITHER_MELEE", "CURSE_WITHER_ELECTRICITY" }

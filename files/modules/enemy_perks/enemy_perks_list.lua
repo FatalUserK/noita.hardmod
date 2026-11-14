@@ -65,8 +65,23 @@ local function spawn_on_death_blacklist(self, data)
 		["data/entities/animals/skullfly.xml"] = true,
 		["data/entities/animals/crypt/skullfly.xml"] = true,
 	}
+	local banned_perks = {
+		"HARDMOD_FORBIDDEN_ARTS"
+	}
+	for _,banned_perk in ipairs(banned_perks) do
+		if data.how_many_of_each_perk[banned_perk] then return end
+	end
 
 	return not (banned_creatures[EntityGetFilename(data.target_enemy)] or data.how_many_of_each_perk["HARDMOD_BOUNTY"] or data.how_many_of_each_perk["HARDMOD_SHADOW_REVIVAL"])
+end
+
+local function split_string(inputstr, sep)
+	sep = sep or "%s"
+	local t= {}
+	for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+		table.insert(t, str)
+	end
+	return t
 end
 
 -- The `data` table provides `target_enemy` (eid), `already_held_perks` (perk_id[]), `player` (eid) and `player_poly_identity` (table)
@@ -102,7 +117,7 @@ enemy_perks = {
 		description = "$hardmod_eperk_recycle_health_desc",
 		weight = 6,
 		priority = 6,
-		max = 1,
+		max = 0, --this perk is a wasted entry as is, rework to be stronger (ie grant Max HP in addition to HP)
 		func = function(self, entity_id, data)
 			EntityAddComponent2(entity_id, "LuaComponent", {
 				script_damage_received = dir.."scripts/recycle_health.lua",
@@ -126,17 +141,51 @@ enemy_perks = {
 		name = "$hardmod_eperk_protector_name",
 		description = "$hardmod_eperk_protector_desc",
 		weight = 8,
-		max = 1,
+		max = 2,
+		biome_conditions = {
+			mines = 4,
+			coal_pits = 4,
+			snowy_depths = 6,
+		},
 		condition = function(self, data)
 			if not data.dmc then return end
-			local max_hp = ComponentGetValue2(data.dmc, "max_hp" )
+			if data.how_many_of_each_perk["HARDMOD_AREA_PROTECTOR"] then return end
+			local max_hp = ComponentGetValue2(data.dmc, "max_hp")
 			if max_hp >= 2 then
 				return true
 			end
 		end,
 		func = function(self, entity_id, data)
 			local x, y = EntityGetTransform(entity_id)
-			EntityAddChild(entity_id, EntityLoad( dir.."entities/protector_shield.xml", x, y))
+			local tier = ( data.how_many_of_each_perk[self.id] or 0 ) + 1
+
+			EntityAddChild(entity_id, EntityLoad( dir.."entities/protector_shield_t"..tier..".xml", x, y))
+		end
+	},
+	{
+		id = "AREA_PROTECTOR",
+		name = "$hardmod_eperk_area_protector_name",
+		description = "$hardmod_eperk_area_protector_desc",
+		weight = 1,
+		max = 2,
+		biome_conditions = {
+			magical_temple = 2,
+			temple_of_the_art = 3,
+			wizards_den = 4,
+		},
+		condition = function(self, data)
+			if data.how_many_of_each_perk["HARDMOD_PROTECTOR"] then return end
+			return data.dmc ~= nil and data.level > 2
+		end,
+		func = function(self, entity_id, data)
+			local x, y = EntityGetTransform(entity_id)
+			local tier = ( data.how_many_of_each_perk[self.id] or 0 ) + 1
+
+			if tier == 1 then
+				EntityAddChild(entity_id, EntityLoad( dir.."entities/area_protector_shield_t1.xml", x, y))
+			elseif tier == 2 then
+				EntityAddChild(entity_id, EntityLoad( dir.."entities/area_protector_shield_t2.xml", x, y))
+			end
 		end
 	},
 	{
@@ -201,6 +250,9 @@ enemy_perks = {
 			for i = 1, clones_to_make do
 				local clone = EntityLoad(EntityGetFilename(entity_id), data.x, data.y)
 				EntityAddTag(clone, "hardmod_blessed")
+				for _,cbc in ipairs(EntityGetComponentIncludingDisabled(clone, "CameraBoundComponent") or {}) do
+					EntityRemoveComponent(clone, cbc)
+				end
 				eperk_utils.give_enemy_perks(clone, utils.deepcopy(data.selected_perks), data)
 				gang[#gang+1] = clone
 			end
@@ -262,13 +314,13 @@ enemy_perks = {
 		func = function(self, entity_id, data)
 			GetGameEffectLoadTo(entity_id, "PROTECTION_FIRE", false)
 			
-			local stacks = data.how_many_of_each_perk[self.id] or 0
-			if stacks == 0 then
+			local stacks = (data.how_many_of_each_perk[self.id] or 0) + 1
+			if stacks == 1 then
 				EntityAddComponent2(entity_id, "LuaComponent", {
 					script_shot = dir.."scripts/pyrelord_on_shot.lua",
 					execute_every_n_frame = -1,
 				})
-			elseif stacks == 1 then
+			elseif stacks == 2 then
 				EntityAddComponent2(entity_id, "LuaComponent", {
 					script_shot = dir.."scripts/pyrelord_plus_on_shot.lua",
 					execute_every_n_frame = -1,
@@ -287,6 +339,7 @@ enemy_perks = {
 			sky = 8,
 		},
 		condition = function(self, data)
+			if EntityHasTag(data.target_enemy, "thundermage") then return end
 			local animal_ai_comp = EntityGetFirstComponentIncludingDisabled(data.target_enemy,"AnimalAIComponent")
 			if animal_ai_comp
 			and ComponentGetValue2(animal_ai_comp,"attack_ranged_enabled")
@@ -317,6 +370,33 @@ enemy_perks = {
 			GetGameEffectLoadTo(entity_id, "KNOCKBACK_IMMUNITY", false)
 			EntityAddComponent2(entity_id, "LuaComponent", {
 				script_shot = dir.."scripts/aerolord_on_shot.lua",
+				execute_every_n_frame = -1,
+			})
+		end
+	},
+	{
+		id = "DARK_FLAMES",
+		name = "$hardmod_eperk_dark_flames_name",
+		description = "$hardmod_eperk_dark_flames_desc",
+		weight = 2,
+		max = 1,
+		biome_conditions = {
+			magical_temple = 4,
+			temple_of_the_art = 8,
+			wizards_den = 8,
+		},
+		condition = function(self, data)
+			local animal_ai_comp = EntityGetFirstComponentIncludingDisabled(data.target_enemy,"AnimalAIComponent")
+			if animal_ai_comp
+			and ComponentGetValue2(animal_ai_comp,"attack_ranged_enabled")
+			and not ComponentGetValue2(animal_ai_comp, "tries_to_ranged_attack_friends")
+			and ComponentGetValue2(animal_ai_comp, "attack_ranged_frames_between") >= 60 then -- only on slow shooters
+				return true
+			end
+		end,
+		func = function(self, entity_id, data)
+			EntityAddComponent2(entity_id, "LuaComponent", {
+				script_shot = dir.."scripts/dark_flames_on_shot.lua",
 				execute_every_n_frame = -1,
 			})
 		end
@@ -355,6 +435,9 @@ enemy_perks = {
 		weight = 6,
 		priority = 0,
 		max = 1,
+		condition = function(self, data)
+			return not (data.dmc and ComponentGetValue2(data.dmc, "wet_status_effect_damage") > 0)
+		end,
 		func = function(self, entity_id, data)
 			EntityAddChild(entity_id, EntityLoad(dir.."entities/wet_aura.xml", data.x, data.y))
 		end
@@ -382,10 +465,12 @@ enemy_perks = {
 		biome_conditions = {
 			fungal_caverns = 2,
 			vault = 2,
+			frozen_vault = 2,
+			powerplant = 8,
 		},
 		max = 1,
 		condition = function(self, data)
-			return not is_projectile_immune(self, data)
+			return not (EntityHasTag(data.target_enemy, "thundermage") or is_projectile_immune(self, data))
 		end,
 		func = function(self, entity_id, data)
 			GetGameEffectLoadTo(entity_id, "PROTECTION_ELECTRICITY", false)
@@ -406,7 +491,7 @@ enemy_perks = {
 			temple_of_the_art = 10,
 			wizards_den = 10,
 		},
-		condition = function(self, data) return data.dmc end,
+		condition = function(...) return not is_projectile_immune(...) end,
 		func = function(self, entity_id, data)
 			ComponentObjectSetValue2(data.dmc, "damage_multipliers", "projectile",
 				ComponentObjectGetValue2(data.dmc, "damage_multipliers", "projectile") * .5
@@ -583,6 +668,9 @@ enemy_perks = {
 		weight = 2,
 		priority = 15,
 		max = 1,
+		biome_conditions = {
+			meat_realm = 0,
+		},
 		condition = spawn_on_death_blacklist,
 		func = function(self, entity_id, data)
 			-- make the enemy explode on death
@@ -600,7 +688,7 @@ enemy_perks = {
 		priority = 20,
 		max = 1,
 		biome_conditions = {
-			coal_pits = 4,
+			coal_pits = 5,
 		},
 		condition = function(self, data)
 			return spawn_on_death_blacklist(self, data) and enemy_is_melee(self, data) and not enemy_is_ranged_attack(self, data) and not (data.vigour or data.is_boss)
@@ -714,6 +802,7 @@ enemy_perks = {
 		name = "$hardmod_eperk_obfuscation_name",
 		description = "$hardmod_eperk_obfuscation_desc",
 		weight = 2,
+		priority = 100,
 		max = 1,
 		condition = function(self, data)
 			return #data.already_held_perks > 0 and data.level > 4
@@ -748,6 +837,60 @@ enemy_perks = {
 			data.perks_to_give = data.perks_to_give + (data.is_boss and 10 or 5)
 			EntityAddComponent2(entity_id, "LuaComponent", {
 				script_death = dir.."scripts/drop_chest_on_death.lua"
+			})
+		end
+	},
+	{
+		id = "SHIELD_SAPPER",
+		name = "$hardmod_eperk_shield_sapper_name",
+		description = "$hardmod_eperk_shield_sapper_desc",
+		weight = 2,
+		max = 1,
+		biome_conditions = {
+			magical_temple = 4,
+			temple_of_the_art = 6,
+			wizards_den = 8,
+		},
+		condition = function(self, data)
+			increment_weight_with_level(self, data)
+			return data.level > 3
+		end,
+		func = function(self, entity_id, data)
+			local x, y = EntityGetTransform(entity_id)
+			EntityAddChild(entity_id, EntityLoad( dir.."entities/shield_sapper_aura.xml", x, y))
+		end
+	},
+	{
+		id = "UNSTABLE_TELEPORTITIS",
+		name = "$hardmod_eperk_unstable_teleportitis_name",
+		description = "$hardmod_eperk_unstable_teleportitis_desc",
+		weight = 2,
+		max = 1,
+		condition = function(self, data) return data.level > 4 end,
+		func = function(self, entity_id, data)
+			local eid = EntityCreateNew("random_teleports")
+			EntityAddComponent2(eid, "GameEffectComponent", {
+				effect = "TELEPORTATION",
+				frames = -1,
+				teleportation_probability = 50,
+				teleportation_delay_min_frames = 600,
+				teleportation_radius_max = 324,
+			})
+			EntityAddChild(entity_id, eid)
+		end
+	},
+	{
+		id = "HOLY_REFLECTION",
+		name = "$hardmod_eperk_holy_reflection_name",
+		description = "$hardmod_eperk_holy_reflection_desc",
+		weight = 3,
+		max = 1,
+		condition = function(self, data) return data.level > 7 end,
+		func = function(self, entity_id, data)
+			EntityAddComponent2(entity_id, "LuaComponent", {
+				execute_every_n_frame = -1,
+				script_damage_received = "data/scripts/animals/wraith_glowing_damage.lua",
+				limit_to_every_n_frame = 10,
 			})
 		end
 	},
@@ -823,6 +966,60 @@ enemy_perks = {
 	-- 		})
 	-- 	end
 	-- },
+	{
+		id = "ALL_SEEING",
+		name = "$hardmod_eperk_all_seeing_name",
+		description = "$hardmod_eperk_all_seeing_desc",
+		weight = 2,
+		priority = 25,
+		max = 2,
+		biome_conditions = {
+			magical_temple = 3,
+			temple_of_the_art = 4,
+			wizards_den = 4,
+		},
+		condition = function(self, data)
+			-- this perk can only appear on mages, ghosts (excl. wand ghosts) and some select enemies
+			local factions = "mage,mage_swapper,ghost,"
+			local creatures = { "monk", "spearbot", }
+
+			local strparts = split_string(EntityGetFilename(data.target_enemy),"/")
+			local filename = strparts[#strparts]
+			local filename_match = false
+			for _,creature_name in ipairs(creatures) do
+				if string.find(filename, creature_name) then
+					print("match found: " .. filename)
+					filename_match = true
+				end
+			end
+			return enemy_is_ranged_attack(self, data)
+				and (string.find(factions, HerdIdToString(utils.GetHerdID(data.target_enemy)))
+				or filename_match) and not EntityHasTag(data.target_enemy, "wand_ghost")
+		end,
+		func = function(self, entity_id, data)
+			local animal_comp = EntityGetFirstComponent(entity_id, "AnimalAIComponent")
+			if animal_comp then
+				ComponentSetValue2(animal_comp, "sense_creatures", true)
+				ComponentSetValue2(animal_comp, "sense_creatures_through_walls", true)
+			end
+			EntityAddComponent2(entity_id, "LuaComponent", {
+				script_source_file = dir.."scripts/all_seeing_scan.lua",
+				execute_every_n_frame = 15,
+			})
+			EntityAddComponent2(entity_id, "LuaComponent", {
+				script_shot = dir.."scripts/all_seeing_on_shot.lua",
+				execute_every_n_frame = -1,
+			})
+
+			local stacks = (data.how_many_of_each_perk[self.id] or 0) + 1
+			if stacks == 2 then
+				EntityAddComponent2(entity_id, "VariableStorageComponent", {
+					name = "hardmod_all_seeing_radius",
+					value_int = 180,
+				})
+			end
+		end
+	},
 }
 
 local perk_incompatibilities = { --ill implement at some point maybe

@@ -255,7 +255,7 @@ local function GetAbilityWeight(ability_id, context, tier)
 			affected_abilities = {"haste","teleport_to_target"},
 			weight_change = function (ability_id)
 				local ratio_required = 2
-				if ability_id == "teleport_to_target" then ratio_required = 8 end
+				if ability_id == "teleport_to_target" then ratio_required = 4 end
 				local chase_modifier = math.max(banishment_ratio-ratio_required,0) --If the player is more than 3x (2x for haste) as likely to flee from felcesis, then start prioritising perks that let felcesis hunt the player down more easily to punish them for their cowardice
 				weight = weight * chase_modifier
 			end
@@ -473,6 +473,15 @@ function CreateMiniboss(entity_id, x, y, tier, budget, health_mult)
 	local hp = ComponentGetValue2(dmgcomp, "max_hp")
 	ComponentSetValue2(dmgcomp, "max_hp", hp * health_mult)
 	ComponentSetValue2(dmgcomp, "hp", hp * health_mult)
+	local blood_type = ComponentGetValue2(dmgcomp,"blood_material")
+	local blood_tags = CellFactory_GetTags(CellFactory_GetType(blood_type)) or {}
+	for _,tag in ipairs(blood_tags) do
+		if tag == "[solid]" or tag == "[sand_ground]" then
+			--Make Ira not bleed their own blood if they're going to be imprisoned by it
+			ComponentSetValue2(dmgcomp,"blood_multiplier",0)
+			break
+		end
+	end
 	ComponentObjectSetValue2(dmgcomp,"damage_multipliers","physics_hit", math.max(0,1-((tier-1) * 0.4))) --Gain 40% physics damage reduction per tier, maxing out at physics damage immunity at tier 3
 	if tier >= 3 then ComponentSetValue2(dmgcomp,"fire_probability_of_ignition",0) end
 
@@ -485,7 +494,7 @@ end
 function CalculateMinibossPower(biomes_visited)
 	local phantom_anger = tonumber(GlobalsGetValue("felcesis_anger","0")) --Felcesis becomes more angry each time they're banished using pheromone, allows them to roll higher on their power variation with each banishment
 	local random_power_variation = math.random(-2,1+phantom_anger)
-	local health_softcap = 15
+	local health_softcap = 20
 	biomes_visited = biomes_visited + random_power_variation
 	local tier = math.max(1,math.floor(1+(biomes_visited / 4)))
 	local budget = math.max(450,400 + (125 * biomes_visited))
@@ -501,7 +510,7 @@ function FindPossessionTarget(biomes_visited)
 	local possible_targets = EntityGetInRadiusWithTag(cam_x,cam_y,math.min(64+(biomes_visited*32),512),"enemy") or {}
 	local strongest_target = {}
 	local player_id = EntityGetWithTag("player_unit")[1] or 0
-	local minimum_distance_from_player = 32 --Don't let felcesis possess an enemy right that's in the player's face, too unfair
+	local minimum_distance_from_player = 76 --Don't let felcesis possess an enemy right that's in the player's face, too unfair (Contact distance's maximum radius + 12 pixels)
 	for _,target in ipairs(possible_targets) do
 		--Filter out non-viable targets
 
