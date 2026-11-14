@@ -849,7 +849,9 @@ enemy_perks = {
 		biome_conditions = {
 			magical_temple = 4,
 			temple_of_the_art = 6,
-			wizards_den = 8,
+			wizards_den = 6,
+			sky = 6,
+			hell = 6,
 		},
 		condition = function(self, data)
 			increment_weight_with_level(self, data)
@@ -974,14 +976,17 @@ enemy_perks = {
 		priority = 25,
 		max = 2,
 		biome_conditions = {
-			magical_temple = 3,
+			mines = 0,
+			coal_pits = 0,
+			magical_temple = 4,
 			temple_of_the_art = 4,
 			wizards_den = 4,
+			tower = 4,
 		},
 		condition = function(self, data)
 			-- this perk can only appear on mages, ghosts (excl. wand ghosts) and some select enemies
 			local factions = "mage,mage_swapper,ghost,"
-			local creatures = { "monk", "spearbot", }
+			local creatures = { "monk", }
 
 			local strparts = split_string(EntityGetFilename(data.target_enemy),"/")
 			local filename = strparts[#strparts]
@@ -1015,7 +1020,7 @@ enemy_perks = {
 			if stacks == 2 then
 				EntityAddComponent2(entity_id, "VariableStorageComponent", {
 					name = "hardmod_all_seeing_radius",
-					value_int = 180,
+					value_int = 150,
 				})
 			end
 		end
